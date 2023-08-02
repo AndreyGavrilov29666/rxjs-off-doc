@@ -906,5 +906,295 @@
 // }, 2000);
 
 
+// import { fromEvent, of, throwError } from 'rxjs';
+// import { ajax } from 'rxjs/ajax';
+// import {
+//   catchError,
+//   finalize,
+//   map,
+//   mergeMap,
+//   retryWhen,
+//   switchMap
+// } from 'rxjs/operators';
+//
+// interface UserResponse {
+//   data: {
+//     id: number;
+//     email: string;
+//     first_name: string;
+//     last_name: string;
+//     avatar: string;
+//   };
+// }
+//
+// function random(max: number, min: number): number {
+//   return Math.floor(Math.random() * (max - min + 1)) + min;
+// }
+//
+// const output = document.getElementById('output') as HTMLTextAreaElement;
+// const btn = document.getElementById('btn') as HTMLButtonElement;
+//
+// fromEvent(btn, 'click')
+//   .pipe(
+//     map(() => random(10, 15)),
+//     mergeMap((id) =>
+//       ajax.getJSON<UserResponse>(`https://reqres.in/api/users/${id}`).pipe(
+//         map((response) => response.data),
+//         catchError((error) => {
+//           output.value += `\n\n${error.message}`;
+//           output.scrollTop = output.scrollHeight;
+//           return throwError(error);
+//         }),
+//         retryWhen((notifier) =>
+//           notifier.pipe(
+//             switchMap((error, i) => {
+//               // retry maximum of 2 times when the status code is 404
+//               const MAX_RETRIES = 2;
+//               if (i < MAX_RETRIES) {
+//                 if (error.status === 404) {
+//                   return of(null);
+//                 }
+//               }
+//               return throwError(error);
+//             })
+//           )
+//         )
+//       )
+//     ),
+//     finalize(() => {
+//       btn.classList.add('cursor-not-allowed');
+//       btn.classList.add('opacity-50');
+//     })
+//   )
+//   .subscribe({
+//     error: (e) => console.error('observer', e),
+//     next: (value) => {
+//       output.value += `\n\n${JSON.stringify(value, null, 2)}`;
+//       output.scrollTop = output.scrollHeight;
+//     },
+//     complete: () => console.log('complete')
+//   });
+
+// import { Subject } from 'rxjs';
+// import { throwIfEmpty } from 'rxjs/operators';
+//
+// const subject = new Subject();
+//
+// subject.pipe(throwIfEmpty(() => new Error('nothing to see here'))).subscribe({
+//   error: (e) => console.error('observer', e),
+//   next: (data) => {
+//     console.log('next')
+//     console.log(data)
+//   },
+//   complete: () => console.log('complete')
+// });
+// // subject.next('1')
+// // throwIfEmpty Он применяется к Observable и выбрасывает ошибку, если этот Observable завершается, не выдав ни одного значения
+// subject.complete();
+
+// import { pipe } from 'rxjs';
+// import { ajax } from 'rxjs/ajax';
+// import { map, tap } from 'rxjs/operators';
+//
+// interface UserResponse {
+//   page: number;
+//   per_page: number;
+//   total: number;
+//   total_pages: number;
+//   data: {
+//     id: number;
+//     email: string;
+//     first_name: string;
+//     last_name: string;
+//     avatar: string;
+//   }[];
+// }
+//
+// enum LoggerType {
+//   Count,
+//   Debug,
+//   Dir,
+//   Log,
+//   Table
+// }
+//
+// const getLoggerByType = (loggerType: LoggerType): ((value: any) => void) => {
+//   switch (loggerType) {
+//     case LoggerType.Count:
+//       return console.count;
+//     case LoggerType.Debug:
+//       return console.debug;
+//     case LoggerType.Dir:
+//       return console.dir;
+//     case LoggerType.Log:
+//       return console.log;
+//     case LoggerType.Table:
+//       return console.table;
+//   }
+// };
+//
+// const logger = (loggerType = LoggerType.Log) =>
+//   pipe(tap(getLoggerByType(loggerType)));
+//
+// ajax
+//   .getJSON<UserResponse>('https://reqres.in/api/users')
+//   .pipe(
+//     map((response) => response.data),
+//     logger(),
+//     logger(LoggerType.Count),
+//     logger(LoggerType.Debug),
+//     logger(LoggerType.Dir),
+//     logger(LoggerType.Table),
+//   )
+//   .subscribe();
+
+// import { from, fromEvent, pipe, of, tap } from 'rxjs';
+// import {
+//   bufferCount,
+//   map,
+//   mergeMap,
+//   sequenceEqual,
+//   delay
+// } from 'rxjs/operators';
+//
+// const buttons = document.querySelectorAll('.btn');
+// const dots = document.querySelectorAll('.dot');
+// const PASSCODE = from([1, 1, 1, 1]);
+//
+// const verifyPasscode = () => {
+//   return pipe(
+//     bufferCount(4),
+//     mergeMap((d) => {
+//       console.log(d);
+//
+//       return from(d).pipe(sequenceEqual(PASSCODE));
+//     })
+//   );
+// };
+//
+// const fillElements = (dots) => {
+//   return (source) =>
+//     source.pipe(
+//       tap((event: MouseEvent) => {
+//         let wasFill = false;
+//         dots.forEach((el) => {
+//           if (!wasFill && !el.classList.contains('bg-black')) {
+//             el.classList.add('bg-black');
+//             wasFill = true;
+//           }
+//         });
+//       })
+//     );
+// };
+//
+// const clearElements = (dots) => {
+//   return (source) =>
+//     source.pipe(
+//       delay(1000),
+//       tap((event: MouseEvent) => {
+//         dots.forEach((el) => {
+//           el.classList.remove('bg-black');
+//         });
+//       })
+//     );
+// };
+//
+// fromEvent<MouseEvent>(buttons, 'click')
+//   .pipe(
+//     map((event: MouseEvent) => {
+//       const target = event.target as HTMLButtonElement;
+//       return parseInt(target.dataset.key!, 10);
+//     }),
+//     fillElements(dots),
+//     verifyPasscode(),
+//     clearElements(dots)
+//   )
+//   .subscribe({
+//     error: console.error,
+//     next: console.log,
+//     complete: () => console.log('complete')
+//   });
+
+// import { from, fromEvent, OperatorFunction, pipe } from 'rxjs';
+// import {
+//   bufferCount,
+//   map,
+//   mergeMap,
+//   sequenceEqual,
+//   tap,
+//   delay
+// } from 'rxjs/operators';
+//
+// const PASSCODE = [1, 1, 1, 1];
+// const buttons = document.querySelectorAll('.btn');
+// const dots = document.querySelectorAll('.dot');
+// const clear = (el: HTMLElement) => el.classList.remove('bg-black');
+// const fill = (el: HTMLElement) => el.classList.add('bg-black');
+//
+// const clearElements = <T>(elements: NodeList) =>
+//   pipe(
+//     delay(1000),
+//     tap(() =>
+//       elements.forEach((el) => clear(el as HTMLElement))
+//     ) as OperatorFunction<T, T>
+//   );
+//
+// const fillElements = <T>(elements: NodeList) => {
+//   let index = 0;
+//   return pipe(
+//     tap(() => {
+//       if (index < PASSCODE.length) {
+//         const el = dots.item(index) as HTMLElement;
+//         fill(el);
+//         index++;
+//       } else {
+//         dots.forEach((el) => clear(el as HTMLElement));
+//         index = 0;
+//       }
+//     }) as OperatorFunction<T, T>
+//   );
+// };
+//
+// const verifyPasscode = () =>
+//   pipe(
+//     bufferCount<number>(4),
+//     mergeMap((passcode) => from(passcode).pipe(sequenceEqual(from(PASSCODE))))
+//   );
+//
+// fromEvent<MouseEvent>(buttons, 'click')
+//   .pipe(
+//     map((event: MouseEvent) => {
+//       const target = event.target as HTMLButtonElement;
+//       return parseInt(target.dataset.key!, 10);
+//     }),
+//     fillElements(dots),
+//     verifyPasscode(),
+//     clearElements(dots)
+//   )
+//   .subscribe({
+//     error: console.error,
+//     next: console.log,
+//     complete: () => console.log('complete')
+//   });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
